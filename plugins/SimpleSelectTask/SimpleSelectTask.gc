@@ -1,0 +1,76 @@
+#include <SimpleSelectTask.hpp>
+#include <cstdio>
+#include <cstring>
+#include <unistd.h>
+#include <cassert>
+
+
+SimpleSelectTask  :: SimpleSelectTask () { }
+
+EXEC SQL INCLUDE SQLCA;
+
+
+void SimpleSelectTask :: Initialize (int aThreadIndex) 
+{
+    EXEC SQL BEGIN DECLARE SECTION ; 
+    char sUserName [MAX_STRING_LEN] ;
+    char sPassword [MAX_STRING_LEN] ; 
+    char sDSN [MAX_STRING_LEN] ; 
+    char sConnName [ MAX_STRING_LEN ];
+    EXEC SQL END   DECLARE SECTION ; 
+
+    mThreadIndex = aThreadIndex ;
+
+
+    std::strncpy ( sUserName , "test" , MAX_STRING_LEN );
+    std::strncpy ( sPassword , "test" , MAX_STRING_LEN );
+    std::strncpy ( sDSN , "DSN=GOLDILOCKS", MAX_STRING_LEN);
+
+    setConnName ( sConnName ) ;
+
+    EXEC SQL AT :sConnName CONNECT :sUserName IDENTIFIED BY :sPassword USING :sDSN; 
+    if ( sqlca.sqlcode ) {
+        std::printf("Fail to connect : [%s]\n" , sqlca.sqlerrm.sqlerrmc );
+    }
+}
+
+void SimpleSelectTask :: Run () 
+{
+    struct sqlca sqlca; 
+    EXEC SQL BEGIN DECLARE SECTION ; 
+    int   sValue; 
+    char sConnName [ MAX_STRING_LEN ];
+    EXEC SQL END   DECLARE SECTION ; 
+
+    setConnName ( sConnName ) ;
+    
+    EXEC SQL AT :sConnName SELECT 1 into :sValue FROM DUAL ;
+    if ( sqlca.sqlcode ) {
+        std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
+        assert ( 0 );
+    }
+  
+}
+
+void SimpleSelectTask :: Finalize () 
+{
+    struct sqlca sqlca; 
+
+    EXEC SQL BEGIN DECLARE SECTION ; 
+    char sConnName [ MAX_STRING_LEN ];
+    EXEC SQL END   DECLARE SECTION ; 
+
+    setConnName ( sConnName ) ;
+
+    EXEC SQL AT :sConnName DISCONNECT ;
+    if ( sqlca.sqlcode ) {
+        std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
+        assert ( 0 );
+    }
+}
+
+
+void SimpleSelectTask :: setConnName ( char * aConnName)
+{
+    sprintf ( aConnName, "CONN_%d", mThreadIndex);
+}
