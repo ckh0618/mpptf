@@ -1,16 +1,16 @@
-#include <SimpleSelectTask.hpp>
+#include <SimpleInserter.hpp>
 #include <cstdio>
 #include <cstring>
 #include <unistd.h>
 #include <cassert>
 
 
-SimpleSelectTask  :: SimpleSelectTask () { }
+SimpleInserter  :: SimpleInserter () { }
 
 EXEC SQL INCLUDE SQLCA;
 
 
-void SimpleSelectTask :: Initialize (int aThreadIndex, int aLoopCount) 
+void SimpleInserter :: Initialize (int aThreadIndex, int aLoopCount) 
 {
     EXEC SQL BEGIN DECLARE SECTION ; 
     char sUserName [MAX_STRING_LEN] ;
@@ -20,7 +20,7 @@ void SimpleSelectTask :: Initialize (int aThreadIndex, int aLoopCount)
     EXEC SQL END   DECLARE SECTION ; 
 
     mThreadIndex = aThreadIndex ;
-    mLoopCount = aLoopCount;
+    mLoopCount = aLoopCount ;
 
 
     std::strncpy ( sUserName , "test" , MAX_STRING_LEN );
@@ -35,7 +35,7 @@ void SimpleSelectTask :: Initialize (int aThreadIndex, int aLoopCount)
     }
 }
 
-void SimpleSelectTask :: Run (int aIndex) 
+void SimpleInserter :: Run (int aIndex) 
 {
     struct sqlca sqlca; 
     EXEC SQL BEGIN DECLARE SECTION ; 
@@ -43,19 +43,21 @@ void SimpleSelectTask :: Run (int aIndex)
     char sConnName [ MAX_STRING_LEN ];
     EXEC SQL END   DECLARE SECTION ; 
 
-    // Stop Complain ...
-    aIndex = aIndex; 
     setConnName ( sConnName ) ;
     
-    EXEC SQL AT :sConnName SELECT 1 into :sValue FROM DUAL ;
+    sValue = mLoopCount * mThreadIndex + aIndex ;
+
+    EXEC SQL AT :sConnName INSERT INTO TEST_001 VALUES ( :sValue, :sValue) ;
+
     if ( sqlca.sqlcode ) {
         std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
         assert ( 0 );
     }
+    EXEC SQL AT :sConnName COMMIT ;
   
 }
 
-void SimpleSelectTask :: Finalize () 
+void SimpleInserter :: Finalize () 
 {
     struct sqlca sqlca; 
 
@@ -73,7 +75,7 @@ void SimpleSelectTask :: Finalize ()
 }
 
 
-void SimpleSelectTask :: setConnName ( char * aConnName)
+void SimpleInserter :: setConnName ( char * aConnName)
 {
     sprintf ( aConnName, "CONN_%d", mThreadIndex);
 }

@@ -1,18 +1,18 @@
-#include <SimpleSelectTask.hpp>
+#include <SimpleInserter.hpp>
 #include <ITask.h>
 
 
 int New  (ObjectHandle *aHandle ) 
 {
-    SimpleSelectTask *sHandle = new SimpleSelectTask () ;
+    SimpleInserter *sHandle = new SimpleInserter () ;
     *aHandle = sHandle; 
     return 0 ;
 }
 
-int Init (ObjectHandle aHandle, int aThreadNo, int aLoopCount ) 
+int Init (ObjectHandle aHandle, int aThreadNo , int aLoopCount) 
 {
 
-    SimpleSelectTask *sHandle = (SimpleSelectTask*)aHandle; 
+    SimpleInserter *sHandle = (SimpleInserter*)aHandle; 
     sHandle->Initialize (aThreadNo, aLoopCount) ;
     return 0;
 
@@ -20,7 +20,7 @@ int Init (ObjectHandle aHandle, int aThreadNo, int aLoopCount )
 
 int Run  (ObjectHandle aHandle, int aLoop ) 
 {
-    SimpleSelectTask *sHandle = (SimpleSelectTask*)aHandle; 
+    SimpleInserter *sHandle = (SimpleInserter*)aHandle; 
     sHandle->Run(aLoop);
 
     return 0 ; 
@@ -28,7 +28,7 @@ int Run  (ObjectHandle aHandle, int aLoop )
 
 int Finalize ( ObjectHandle aHandle)
 {
-    SimpleSelectTask *sHandle = (SimpleSelectTask*)aHandle; 
+    SimpleInserter *sHandle = (SimpleInserter*)aHandle; 
     sHandle->Finalize();
 
     return 0;

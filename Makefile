@@ -1,5 +1,5 @@
 
-CXX_FLAGS=-std=c++11 -O0 -W -Wall -fpic  -g
+CXX_FLAGS=-std=c++11 -O2 -W -Wall -fpic 
 CXX=g++
 INC= -I. -I ./timer
 all: 

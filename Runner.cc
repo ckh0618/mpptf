@@ -12,8 +12,8 @@
 #define MAX_THREAD_COUNT 1024 
 
 typedef int ( *NewFuncType )(void *) ;
-typedef int ( *InitFuncType )(void *, int  ) ;
-typedef int ( *RunFuncType )(void *) ;
+typedef int ( *InitFuncType )(void *, int, int  ) ;
+typedef int ( *RunFuncType )(void *, int) ;
 typedef int ( *FinalizeFuncType )(void *) ;
 
 
@@ -138,7 +138,7 @@ int ThreadFunction ( const CommandLineArgument& aCommandLine, int aThreadIndex)
     for ( int i = 0 ; i < aCommandLine.mLoopCount ; ++i )
     {
         aCommandLine.mTimer[aThreadIndex]->Start("RUN");
-        sRC = (*aCommandLine.mRunFunction)(sHandle);
+        sRC = (*aCommandLine.mRunFunction)(sHandle, i);
         aCommandLine.mTimer[aThreadIndex]->End("RUN");
         assert ( sRC == 0 );
     }
@@ -176,7 +176,7 @@ int PrepareHandle (CommandLineArgument& aCommandLine)
     {
         sRC = (*aCommandLine.mNewFunction)(&aCommandLine.mHandle[i]);
         assert ( sRC == 0 );
-        sRC = (*aCommandLine.mInitFunction)(aCommandLine.mHandle[i], i);
+        sRC = (*aCommandLine.mInitFunction)(aCommandLine.mHandle[i], i, aCommandLine.mLoopCount);
         assert ( sRC == 0 );
 
         aCommandLine.mTimer[i] = new timer_util::MultiPointTimer ( timer_util::microsecond );

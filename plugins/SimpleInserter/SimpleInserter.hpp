@@ -3,14 +3,14 @@
 #include <ITask.hpp>
 #define MAX_STRING_LEN 1024 
 
-class SimpleSelectTask : public ITask { 
+class SimpleInserter : public ITask { 
 
     public :
-        SimpleSelectTask () ; 
-        void Initialize ( int aThreadIndex, int aLoopCounter ); 
+        SimpleInserter () ; 
+        void Initialize ( int aThreadIndex , int aLoopCount); 
         void Run (int aIndex); 
         void Finalize ();
-        ~SimpleSelectTask () ;
+        ~SimpleInserter () ;
 
     private : 
         int mThreadIndex; 

@@ -2,7 +2,7 @@
 
 class ITask {
     public :
-        virtual void Initialize ( int aThreadIndex )  = 0; 
-        virtual void Run () = 0; 
+        virtual void Initialize ( int aThreadIndex, int aLoopCount )  = 0; 
+        virtual void Run (int aIndex) = 0; 
         virtual void Finalize () = 0 ;
 };
