@@ -197,6 +197,7 @@ int PrintResult (CommandLineArgument& aCommandLine )
         delete aCommandLine.mTimer[i] ; 
         aCommandLine.mTimer[i] = NULL ;
     }
+    return 0;
 }
 
 int main (int argc, char **argv ) 

@@ -1,5 +1,5 @@
 #include <SimpleSelectTask.hpp>
-#include <SimpleSelectTask.h>
+#include <ITask.h>
 
 
 int New  (ObjectHandle *aHandle ) 

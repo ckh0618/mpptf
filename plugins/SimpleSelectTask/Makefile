@@ -9,4 +9,4 @@ all:
 	gcc -shared -o libSimpleSelectTask.so SimpleSelectTask.o SimpleSelectSelectInterface.o -lgoldilocksesqls -L${GOLDILOCKS_HOME}/lib -lgoldilockscs-ul64
 
 clean:
-	rm -rf *.o test_timer *.so test_timer_c *.a
+	rm -rf *.o test_timer *.so test_timer_c *.a SimpleSelectTask.cc

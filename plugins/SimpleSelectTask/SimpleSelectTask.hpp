@@ -13,6 +13,6 @@ class SimpleSelectTask : public ITask {
         ~SimpleSelectTask () ;
 
     private : 
-	    int mThreadIndex; 
+        int mThreadIndex; 
         void setConnName ( char * aConnName);
 };
