@@ -1,5 +1,4 @@
 #pragma once
-
 #include <ITask.hpp>
 #define MAX_STRING_LEN 1024 
 

@@ -36,14 +36,14 @@ typedef struct {
 
 } CommandLineArgument;
 
-void PrintHelpMessage ( int argc, char **argv ) 
+static  void PrintHelpMessage ( int argc, char **argv ) 
 {
     std::printf("Got long argc[%d]\n", argc);
     std::printf ("Usage : %s -t [TotalThreadCount] -l [LibraryFilePath] -c [LoopCount]\n", argv[0]);
     std::printf ("Example : %s -t 10 -l ./plugin/libSelect.so -c 10000\n", argv[0]);
 }
 
-int ParseCommandLine ( int argc, char **argv, CommandLineArgument& aCommandLine)
+static  int ParseCommandLine ( int argc, char **argv, CommandLineArgument& aCommandLine)
 {
     int sOpt; 
 
@@ -75,7 +75,7 @@ int ParseCommandLine ( int argc, char **argv, CommandLineArgument& aCommandLine)
     return 0 ;
 }
 
-int LoadPlugin (CommandLineArgument& aCommandLine) 
+static  int LoadPlugin (CommandLineArgument& aCommandLine) 
 {
     void * sLibraryHandle; 
     char * sError; 
@@ -129,7 +129,7 @@ int LoadPlugin (CommandLineArgument& aCommandLine)
     return 0;
 
 }
-int ThreadFunction ( const CommandLineArgument& aCommandLine, int aThreadIndex) 
+static int ThreadFunction ( const CommandLineArgument& aCommandLine, int aThreadIndex) 
 {
     int sRC;
 
@@ -150,7 +150,7 @@ int ThreadFunction ( const CommandLineArgument& aCommandLine, int aThreadIndex)
 }
 
 
-int CreateThread (const CommandLineArgument& aCommandLine)
+static int CreateThread (const CommandLineArgument& aCommandLine)
 {
     std::thread* sThread[MAX_THREAD_COUNT];
 
@@ -168,7 +168,7 @@ int CreateThread (const CommandLineArgument& aCommandLine)
 
 }
 
-int PrepareHandle (CommandLineArgument& aCommandLine) 
+static int PrepareHandle (CommandLineArgument& aCommandLine) 
 {
     int sRC; 
 
@@ -185,18 +185,24 @@ int PrepareHandle (CommandLineArgument& aCommandLine)
     return 0;
 }
 
-int PrintResult (CommandLineArgument& aCommandLine )
+static int PrintResult (CommandLineArgument& aCommandLine )
 {
     timer_util::TimerResult sResult ;
+    double  sTotalOps = 0.0;
 
     for ( int i = 0 ; i < aCommandLine.mTotalThreadCount ; ++i ) 
     {
         aCommandLine.mTimer[i]->GetResult ( "RUN", sResult );
-        std::printf("Thread[%5d] MinLat[%9.2lf] AvgLat[%9.2f] MaxLat[%9.2lf] 99 Pct[%9.2lf] 99.9 Pct[%9.2lf] Ops[%9.2lf] \n", 
+        std::printf("Thread[%5d] MinLat[%9.2lf] AvgLat[%9.2f] MaxLat[%9.2lf] 99 Pct[%9.2lf] 99.9 Pct[%9.2lf] Ops[%9.2lf]\n", 
                     i, sResult.mMin, sResult.mAvg, sResult.mMax, sResult.m99, sResult.m999, sResult.mOps);
+        sTotalOps+=sResult.mOps; 
         delete aCommandLine.mTimer[i] ; 
         aCommandLine.mTimer[i] = NULL ;
     }
+    std::printf("------------------------------------------------------------------------------------------------------------------------\n");
+    std::printf("                                                                                                    Total Ops[%9.2lf]\n", 
+                sTotalOps ) ;
+       
     return 0;
 }
 

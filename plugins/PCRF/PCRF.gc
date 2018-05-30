@@ -1,0 +1,163 @@
+#include <PCRF.hpp>
+#include <cstdio>
+#include <cstring>
+#include <unistd.h>
+#include <cassert>
+
+
+PCRF  :: PCRF () { }
+
+EXEC SQL INCLUDE SQLCA;
+
+
+void PCRF :: Initialize (int aThreadIndex, int aLoopCount) 
+{
+    EXEC SQL BEGIN DECLARE SECTION ; 
+    char sUserName [MAX_STRING_LEN] ;
+    char sPassword [MAX_STRING_LEN] ; 
+    char sDSN [MAX_STRING_LEN] ; 
+    char sConnName [ MAX_STRING_LEN ];
+    EXEC SQL END   DECLARE SECTION ; 
+
+    mThreadIndex = aThreadIndex ;
+    mLoopCount = aLoopCount ;
+    mGroupCount = TOTAL_GROUP_COUNT; 
+
+    std::strncpy ( sUserName , "test" , MAX_STRING_LEN );
+    std::strncpy ( sPassword , "test" , MAX_STRING_LEN );
+
+    for ( int i = 0 ; i < mGroupCount ; ++i ) 
+    {
+        std::sprintf(sDSN, "DSN=GOLDILOCKS_%d", i );
+        setConnName ( sConnName, i ) ;
+        EXEC SQL AT :sConnName CONNECT :sUserName IDENTIFIED BY :sPassword USING :sDSN; 
+        if ( sqlca.sqlcode ) {
+            std::printf("Fail to connect : [%s]\n" , sqlca.sqlerrm.sqlerrmc );
+            return ;
+        }
+
+        EXEC SQL AT :sConnName AUTOCOMMIT ON ;
+        if ( sqlca.sqlcode ) {
+            std::printf("Fail to connect : [%s]\n" , sqlca.sqlerrm.sqlerrmc );
+            return ;
+        }
+    }
+}
+
+
+void PCRF :: Run (int aIndex) 
+{
+    struct sqlca sqlca; 
+    EXEC SQL BEGIN DECLARE SECTION ; 
+    
+    char sConnName [ MAX_STRING_LEN ];
+
+    typedef struct {
+        char mSessionID [16+1];
+        char mMSIDSN [32+1] ;
+        char mIMSI [32+1];
+        char mSessionStatus [1 + 1] ;
+        char mOpenDate[16+1];
+        char mOpenTime[16+1];
+        char mLocationID[16+1];
+        char mCcrType[1+1];
+        char mCcrRecordNo [4+1];
+        char mIPAddr[64+1];
+        char mClientHost[64+1];
+        char mClientRealm[32+1];
+        char mBearerID [32 +1 ] ;
+    } SESSION_PCF_TYPE;
+
+    SESSION_PCF_TYPE sSessionData; 
+    int   sGroupNo;
+    EXEC SQL END   DECLARE SECTION ; 
+
+    std::memset ( &sSessionData, 0x00, sizeof(SESSION_PCF_TYPE));
+    std::sprintf(sSessionData.mSessionID, "%016d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mMSIDSN, "%032d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mIMSI, "%032d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mSessionStatus, "%01d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mOpenDate, "%016d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mOpenTime, "%016d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mLocationID, "%016d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mCcrType, "%016d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mCcrRecordNo, "%01d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mIPAddr, "%064d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mClientHost, "%064d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mClientRealm, "%032d", (mLoopCount * mThreadIndex ) + aIndex );
+    std::sprintf(sSessionData.mBearerID, "%032d", (mLoopCount * mThreadIndex ) + aIndex );
+
+        
+
+    setConnName ( sConnName , aIndex % mGroupCount) ;
+
+    EXEC SQL AT :sConnName 
+    SELECT SHARD_GROUP_ID ( T_TEST_SESSION_PCF_HASH, :sSessionData.mSessionID ) - 1 
+    INTO :sGroupNo 
+    FROM DUAL; 
+
+    if ( sqlca.sqlcode ) {
+        std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
+        assert ( 0 );
+    }
+    
+    setConnName ( sConnName , sGroupNo ) ;
+    EXEC SQL AT :sConnName 
+    INSERT INTO T_TEST_SESSION_PCF_HASH VALUES ( :sSessionData );
+    
+    if ( sqlca.sqlcode ) {
+        std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
+        assert ( 0 );
+    }
+    
+    EXEC SQL AT :sConnName 
+    UPDATE T_TEST_SESSION_PCF_HASH 
+    SET    MSISDN = '1' 
+    WHERE  SESSION_ID = :sSessionData.mSessionID ; 
+    if ( sqlca.sqlcode ) {
+        std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
+        assert ( 0 );
+    }
+
+    EXEC SQL AT :sConnName 
+    UPDATE T_TEST_SESSION_PCF_HASH 
+    SET    MSISDN = '2' 
+    WHERE  SESSION_ID = :sSessionData.mSessionID ; 
+    if ( sqlca.sqlcode ) {
+        std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
+        assert ( 0 );
+    }
+
+    EXEC SQL AT :sConnName 
+    DELETE FROM T_TEST_SESSION_PCF_HASH 
+    WHERE  SESSION_ID = :sSessionData.mSessionID ; 
+
+    if ( sqlca.sqlcode ) {
+        std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
+        assert ( 0 );
+    }
+
+}
+
+void PCRF :: Finalize () 
+{
+    struct sqlca sqlca; 
+
+    EXEC SQL BEGIN DECLARE SECTION ; 
+    char sConnName [ MAX_STRING_LEN ];
+    EXEC SQL END   DECLARE SECTION ; 
+
+    setConnName ( sConnName , 0) ;
+
+    EXEC SQL AT :sConnName DISCONNECT ;
+    if ( sqlca.sqlcode ) {
+        std::printf("EXEC ERROR : [%s] [%s]\n" , sqlca.sqlerrm.sqlerrmc, sConnName );
+        assert ( 0 );
+    }
+}
+
+
+void PCRF :: setConnName ( char * aConnName, int aGroupNo)
+{
+    sprintf ( aConnName, "CONN_%d_%d", mThreadIndex, aGroupNo);
+}
