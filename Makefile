@@ -9,13 +9,7 @@ all:
 
 	cd plugins && make
 
-
-
-test : 
-	g++ ${INC} test.cc -o test_timer ${LPATH} ${LIB}
-	gcc ${INC} test.c -o test_timer_c ${LPATH} ${LIB} -lstdc++ -ldl
-
-
 clean:
 	rm -rf *.o  *.so *.a Runner
 	cd plugins && make clean 
+	cd timer && make clean
