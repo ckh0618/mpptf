@@ -82,8 +82,10 @@ static  int LoadPlugin (CommandLineArgument& aCommandLine)
 
  
     sLibraryHandle = dlopen ( aCommandLine.mLibraryFullPath, RTLD_LAZY );
-    if ( sLibraryHandle == NULL ) { 
-        return -1;
+    sError = dlerror() ;
+    if ( sError != NULL ) { 
+        printf("ERROR : %s \n", sError);
+        exit ( EXIT_FAILURE );
     }
 
     NewFuncType sNewFunction  = (NewFuncType)dlsym ( sLibraryHandle, "New");
@@ -127,8 +129,8 @@ static  int LoadPlugin (CommandLineArgument& aCommandLine)
     aCommandLine.mFinalizeFunction = sFinalizeFunction;
 
     return 0;
-
 }
+
 static int ThreadFunction ( const CommandLineArgument& aCommandLine, int aThreadIndex) 
 {
     int sRC;
@@ -163,6 +165,11 @@ static int CreateThread (const CommandLineArgument& aCommandLine)
     for ( int i = 0 ; i < aCommandLine.mTotalThreadCount ; ++i ) 
     {
         sThread[i]->join ();
+    }
+
+    for ( int i = 0 ; i < aCommandLine.mTotalThreadCount ; ++i ) 
+    {
+        delete sThread[i] ; 
     }
     return 0;
 
